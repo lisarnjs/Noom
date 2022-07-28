@@ -21,11 +21,22 @@ const sockets = [];
 // backend의 socket = 연결된 브라우저
 wss.on("connection", (socket) => {
   sockets.push(socket);
+  socket["nickname"] = "Anon";
   console.log("Connected to Browser");
   socket.on("close", () => console.log("Disconnected from the Browser")); // 브라우저 창을 닫으면 실행됨
-  socket.on("message", (message) => {
-    const translateMessageData = message.toString("utf8");
-    sockets.forEach((aSocket) => aSocket.send(translateMessageData));
+  socket.on("message", (msg) => {
+    const translateMessageData = msg.toString("utf8");
+    const message = JSON.parse(translateMessageData);
+    switch (message.type) {
+      case "new_message":
+        sockets.forEach((aSocket) =>
+          aSocket.send(`${socket.nickname} : ${message.payload}`)
+        );
+        break;
+      case "nickname":
+        socket["nickname"] = message.payload;
+        break;
+    }
   });
 });
 
